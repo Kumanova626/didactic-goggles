@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Матрица на Айзенхауер - Учебно упражнение</title>
+    <style>
+        :root {
+            --urgent-color: #ffcccc;
+            --not-urgent-color: #ccffcc;
+            --important-color: #ffe5b4;
+            --not-important-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 { color: #2c3e50; }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* Списък със задачи */
+        #task-list {
+            width: 300px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .task {
+            background: #3498db;
+            color: white;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            cursor: grab;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        /* Матрица */
+        .matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+            flex-grow: 1;
+        }
+
+        .quadrant {
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .quadrant h3 { margin-top: 0; text-align: center; font-size: 16px; }
+
+        #q1 { background-color: var(--urgent-color); }
+        #q2 { background-color: var(--not-urgent-color); }
+        #q3 { background-color: var(--important-color); }
+        #q4 { background-color: var(--not-important-color); }
+
+        .wrong { background-color: #e74c3c !important; }
+        .correct { background-color: #2ecc71 !important; }
+
+        #result-area {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Матрица на Айзенхауер: Управление на времето</h1>
+    <p>Разпредели 20-те дейности в правилните квадранти според тяхната спешност и важност.</p>
+
+    <div class="container">
+        <div id="task-list" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>Дейности</h3>
+            </div>
+
+        <div class="matrix">
+            <div id="q1" class="quadrant" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3>1. Спешни и важни (Направи веднага)</h3>
+            </div>
+            <div id="q2" class="quadrant" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3>2. Важни, но неспешни (Планирай)</h3>
+            </div>
+            <div id="q3" class="quadrant" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3>3. Спешни, но неважни (Делегирай/Ограничи)</h3>
+            </div>
+            <div id="q4" class="quadrant" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3>4. Неспешни и неважни (Елиминирай)</h3>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-area"></div>
+    <button onclick="location.reload()">Нулирай играта</button>
+
+  <script>
+    const tasks = [
+        { id: 1, text: "Подготовка за класно по математика утре", q: "q1" },
+        { id: 2, text: "Писане на домашно, което е за следващия час", q: "q1" },
+        { id: 3, text: "Спешно обаждане на родител", q: "q1" },
+        { id: 4, text: "Спорт и физическа активност за здраве", q: "q2" },
+        { id: 5, text: "Учене на чужд език по 15 мин всеки ден", q: "q2" },
+        { id: 6, text: "Четене на книга от списъка за лятото", q: "q2" },
+        { id: 7, text: "Планиране на задачите за седмицата", q: "q2" },
+        { id: 10, text: "Преглеждане на известия от TikTok (безцелно)", q: "q4" },
+        { id: 11, text: "Видео игри до късно вечерта", q: "q4" },
+        { id: 12, text: "Гледане на реклами в YouTube", q: "q4" },
+        { id: 13, text: "Телефонни измамници (вдигане на непознат)", q: "q4" },
+        { id: 14, text: "Безкрайно скролване в Instagram", q: "q4" },
+        { id: 15, text: "Прекъсване от съученик за дребна клюка", q: "q3" },
+        { id: 16, text: "Отговаряне на несъществени съобщения в групата", q: "q3" },
+        { id: 17, text: "Рекламни мейли в пощата", q: "q3" },
+        { id: 18, text: "Помощ на приятел за нещо, което той може сам", q: "q3" },
+        { id: 19, text: "Ходене до магазина за нещо забравено (спешно)", q: "q3" },
+        { id: 20, text: "Оправяне на леглото (точно преди излизане)", q: "q1" },
+        { id: 8, text: "Подготовка на проект за след 2 седмици", q: "q2" },
+        { id: 9, text: "Разговор с приятел за бъдещи цели", q: "q2" }
+    ];
+
+    const taskList = document.getElementById('task-list');
+    tasks.sort(() => Math.random() - 0.5);
+
+    tasks.forEach(task => {
+        const div = document.createElement('div');
+        div.className = 'task';
+        div.textContent = task.text;
+        div.id = 'task-' + task.id;
+        div.draggable = true;
+        div.setAttribute('data-correct-q', task.q);
+        
+        // Стандартни събития за компютър
+        div.ondragstart = (ev) => ev.dataTransfer.setData("text", ev.target.id);
+        
+        // МОБИЛНИ СЪБИТИЯ (Touch Events)
+        div.addEventListener('touchstart', touchStart, {passive: false});
+        div.addEventListener('touchmove', touchMove, {passive: false});
+        div.addEventListener('touchend', touchEnd, {passive: false});
+
+        taskList.appendChild(div);
+    });
+
+    function allowDrop(ev) { ev.preventDefault(); }
+
+    function drop(ev) {
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        const draggedElement = document.getElementById(data);
+        const target = ev.target.closest('.quadrant') || ev.target.closest('#task-list');
+        if (target) {
+            target.appendChild(draggedElement);
+            checkProgress();
+        }
+    }
+
+    // Логика за мобилно местене
+    let activeElement = null;
+
+    function touchStart(e) {
+        activeElement = e.target;
+        activeElement.style.opacity = "0.5";
+    }
+
+    function touchMove(e) {
+        e.preventDefault(); // Спира скролването на страницата, докато влачим
+        const touchLocation = e.targetTouches[0];
+        activeElement.style.position = "fixed";
+        activeElement.style.left = touchLocation.clientX - 50 + 'px';
+        activeElement.style.top = touchLocation.clientY - 20 + 'px';
+        activeElement.style.zIndex = "1000";
+    }
+
+    function touchEnd(e) {
+        activeElement.style.opacity = "1";
+        activeElement.style.position = "static";
+        activeElement.style.zIndex = "auto";
+
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const quadrant = target ? target.closest('.quadrant') : null;
+
+        if (quadrant) {
+            quadrant.appendChild(activeElement);
+        } else {
+            document.getElementById('task-list').appendChild(activeElement);
+        }
+        
+        activeElement = null;
+        checkProgress();
+    }
+
+    function checkProgress() {
+        const allTasksInQuadrants = document.querySelectorAll('.matrix .task');
+        if (allTasksInQuadrants.length === 20) {
+            validateResults();
+        }
+    }
+
+    function validateResults() {
+        let correctCount = 0;
+        let wrongCount = 0;
+        const allTasks = document.querySelectorAll('.task');
+
+        allTasks.forEach(task => {
+            const parentId = task.parentElement.id;
+            const correctId = task.getAttribute('data-correct-q');
+
+            if (parentId === correctId) {
+                task.classList.add('correct');
+                correctCount++;
+            } else {
+                task.classList.add('wrong');
+                wrongCount++;
+            }
+            // Премахваме мобилните събития, за да "замразим" резултата
+            task.removeEventListener('touchstart', touchStart);
+        });
+
+        document.getElementById('result-area').innerHTML = 
+            `Резултат: <span style="color: green;">${correctCount} верни</span> и <span style="color: red;">${wrongCount} грешни</span>.`;
+    }
+</script>
+</body>
+</html>
